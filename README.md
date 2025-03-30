@@ -1,1 +1,1 @@
-## mail/text/gpt/confluence/zoom-en-text learning
+## Mail/Text/GPT/Confluence/Zoom-en-text/OCR... Learning
