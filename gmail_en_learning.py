@@ -50,7 +50,7 @@ def scrape_gmail_emails(known_words_file):
         
         # 等待用户登录并加载收件箱
         WebDriverWait(driver, 300).until(
-            EC.presence_of_element_located((By.xpath, "//div[contains(@role, 'main')]"))
+            EC.presence_of_element_located((By.XPATH, "//div[contains(@role, 'main')]"))
         )
         print("登录成功！开始抓取邮件...")
         
@@ -61,7 +61,7 @@ def scrape_gmail_emails(known_words_file):
         # 获取所有邮件元素
         time.sleep(5)  # 给页面加载时间
         emails = WebDriverWait(driver, 30).until(
-            EC.presence_of_all_elements_located((By.xpath, "//tr[contains(@role, 'row')]"))
+            EC.presence_of_all_elements_located((By.XPATH, "//tr[contains(@role, 'row')]"))
         )
         
         # 限制为最近的50封邮件
@@ -80,7 +80,7 @@ def scrape_gmail_emails(known_words_file):
                 
                 # 等待邮件内容加载
                 email_content = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((By.xpath, "//div[contains(@role, 'main')]"))
+                    EC.presence_of_element_located((By.XPATH, "//div[contains(@role, 'main')]"))
                 )
                 
                 # 获取邮件内容文本
@@ -91,7 +91,7 @@ def scrape_gmail_emails(known_words_file):
                 all_unknown_words.extend(unknown_words)
                 
                 # 返回到收件箱
-                back_button = driver.find_element(By.xpath, "//div[contains(@aria-label, 'Back') or contains(@title, 'Back to Inbox')]")
+                back_button = driver.find_element(By.XPATH, "//div[contains(@aria-label, 'Back') or contains(@title, 'Back to Inbox')]")
                 back_button.click()
                 time.sleep(1)
                 
