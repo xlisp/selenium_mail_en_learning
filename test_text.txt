@@ -1,0 +1,173 @@
+I'll help you create a VSCode extension that can expand and collapse markdown outline/list structures. Let me plan this out first.
+
+I'll help you create a VSCode extension that can handle expanding and collapsing markdown outlines. I'll provide you with the necessary files and code to implement this functionality.
+
+Here's a complete implementation:
+
+```json name=package.json
+{
+  "name": "markdown-outline-folder",
+  "displayName": "Markdown Outline Folder",
+  "description": "Expand and collapse markdown outlines",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:markdown"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "markdown-outline.toggleFold",
+        "title": "Toggle Markdown Outline Fold"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "markdown-outline.toggleFold",
+        "key": "ctrl+shift+[",
+        "mac": "cmd+shift+[",
+        "when": "editorTextFocus && editorLangId == markdown"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^16.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.0.0"
+  }
+}
+```
+
+```typescript name=src/extension.ts
+import * as vscode from 'vscode';
+
+export function activate(context: vscode.ExtensionContext) {
+    let disposable = vscode.commands.registerCommand('markdown-outline.toggleFold', () => {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            return;
+        }
+
+        const document = editor.document;
+        const selection = editor.selection;
+        const line = document.lineAt(selection.start.line);
+
+        // Check if the current line is a list item
+        if (!isListItem(line.text)) {
+            return;
+        }
+
+        const currentIndentation = getIndentation(line.text);
+        const startLine = selection.start.line;
+        let endLine = startLine;
+
+        // Find the last line of the nested content
+        for (let i = startLine + 1; i < document.lineCount; i++) {
+            const nextLine = document.lineAt(i);
+            if (!nextLine.text.trim() || getIndentation(nextLine.text) <= currentIndentation) {
+                break;
+            }
+            endLine = i;
+        }
+
+        // If there are nested items
+        if (endLine > startLine) {
+            const foldingRange = new vscode.FoldingRange(startLine, endLine);
+            toggleFold(editor, foldingRange);
+        }
+    });
+
+    context.subscriptions.push(disposable);
+}
+
+function isListItem(line: string): boolean {
+    return /^[\s]*[-*+][\s]/.test(line);
+}
+
+function getIndentation(line: string): number {
+    return line.search(/\S/);
+}
+
+async function toggleFold(editor: vscode.TextEditor, range: vscode.FoldingRange) {
+    // Get all folding ranges
+    const foldingRanges = await vscode.commands.executeCommand<vscode.FoldingRange[]>('vscode.executeFoldingRangeProvider', editor.document.uri);
+    
+    // Find if the current range is folded
+    const isFolded = foldingRanges?.some(r => 
+        r.start === range.start && r.end === range.end
+    );
+
+    if (isFolded) {
+        await vscode.commands.executeCommand('editor.unfold');
+    } else {
+        await editor.fold([range]);
+    }
+}
+
+export function deactivate() {}
+```
+
+```typescript name=src/tsconfig.json
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "ES2020",
+        "outDir": "out",
+        "lib": ["ES2020"],
+        "sourceMap": true,
+        "rootDir": "src",
+        "strict": true
+    },
+    "exclude": ["node_modules", ".vscode-test"]
+}
+```
+
+To use this extension:
+
+1. Create a new directory for your extension
+2. Create the file structure as shown above
+3. Open a terminal in the extension directory and run:
+```bash
+npm install
+npm run compile
+```
+
+4. Press F5 in VSCode to launch the extension development host
+5. Open a markdown file and test the functionality:
+   - Place your cursor on any list item
+   - Press `Ctrl+Shift+[` (Windows/Linux) or `Cmd+Shift+[` (Mac) to toggle folding
+   - Or use the command palette (`Ctrl+Shift+P`) and search for "Toggle Markdown Outline Fold"
+
+Features of this implementation:
+
+1. Detects markdown list items (works with `-`, `*`, and `+` list markers)
+2. Folds/unfolds nested content under the current list item
+3. Preserves the proper indentation levels
+4. Works with multiple levels of nesting
+5. Keyboard shortcut support
+6. Only activates for markdown files
+
+Example usage with your markdown:
+```markdown
+- aaa       <!-- Place cursor here and press Ctrl+Shift+[ -->
+    - 222   <!-- This will be folded/unfolded -->
+- 111       <!-- Place cursor here for a different fold section -->
+    - 222   <!-- This will be folded/unfolded -->
+    - 333
+```
+
+The extension will properly handle the folding and unfolding of nested items while maintaining the document's structure. When you fold a section, all nested items under that level will be hidden, and you can unfold them again using the same shortcut.
+
+Would you like me to explain any specific part of the implementation in more detail?
+
